@@ -1,7 +1,4 @@
-import dataclasses
 import enum
-
-from matplotlib.style import available
 
 ROWS, COLUMMS = 3, 3
 CELLS = ROWS * COLUMMS
@@ -18,24 +15,26 @@ class Board:
         self._board = self._create_board()
         self._move_cnt = 0
         self._winner = None
-        self._state_sums = {'rows': [0] * ROWS, 
-                            'cols': [0] * COLUMMS,
-                            'diags':[0] * 2}
+        self._scores = {'rows': [0] * ROWS, 
+                        'cols': [0] * COLUMMS,
+                        'diags':[0] * 2}
         self._score_maps = { Player.X: 1, Player.O: -1}
-        self._display_Player = { Player.EMPTY: " ",
-                                 Player.X: "X",
-                                 Player.O: "O" }
+
     def _create_board(self):
         return [[Player.EMPTY for _ in range(COLUMMS)] for _ in range(ROWS)]
 
     def __str__(self):
+        display_player = {Player.EMPTY: " ",
+                          Player.X: "X",
+                          Player.O: "O"}
+                            
         display_str = "==" * ROWS + "\n"
         for row in self._board:
-            row_display = [self._display_Player[Player] for Player in row]
+            row_display = [display_player[player] for player in row]
             display_str += '|'.join(row_display)
             display_str += "\n"
         display_str += "==" * ROWS
-        display_str += f"\nWinner is {self._display_Player.get(self._winner, None)}\n"
+        display_str += f"\nWinner is {display_player.get(self._winner, None)}\n"
         return display_str
 
     def play(self, row: int, col: int) -> bool:
@@ -58,13 +57,13 @@ class Board:
 
     def _update_score(self, row, col):
         
-        self._state_sums['rows'][row] += self._score_maps[self._current_player]
-        self._state_sums['cols'][col] += self._score_maps[self._current_player]
+        self._scores['rows'][row] += self._score_maps[self._current_player]
+        self._scores['cols'][col] += self._score_maps[self._current_player]
         
         if row == col:
-            self._state_sums['diags'][0] += self._score_maps[self._current_player]
+            self._scores['diags'][0] += self._score_maps[self._current_player]
         if row == len(self._board) - col - 1:
-            self._state_sums['diags'][1] += self._score_maps[self._current_player]
+            self._scores['diags'][1] += self._score_maps[self._current_player]
 
     def _update_player(self):
         if self._current_player == Player.X:
@@ -76,11 +75,11 @@ class Board:
         if self._winner:
             return self._winner
 
-        for sums in self._state_sums.values():
-            for sum in sums:
-                if sum == SCORE:
+        for scores in self._scores.values():
+            for score in scores:
+                if score == SCORE:
                     self._winner = Player.X
-                if sum == -SCORE:
+                if score == -SCORE:
                     self._winner = Player.O
 
     def is_finished(self):
