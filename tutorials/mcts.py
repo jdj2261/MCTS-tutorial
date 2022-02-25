@@ -1,74 +1,102 @@
 import random
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+from dataclasses import dataclass
 
 # tree node class definition
-class TreeNode:
-    def __init__(self, state, parent=None):
-        self.state = state
-        self.visits = 0
-        self.reward = 0
-        self.value = 0
-        self.parent = parent
-        self.children = []
-
+# Tree operation
+# Graph structure package NewtworkX
+    # RRT (괜찮음)
+    # MCTS (Sub Tree, Minimum spanding Tree, 최단 거리, Tree structure Visualize 지원)
+ 
 # MCTS class definition
+# TODO (Expand or UCB)
+# recursive 추가
+
+@dataclass
+class NodeData:
+    DEPTH = 'depth',
+    STATE = 'state',
+    REWARD = 'reward',
+    VALUE = 'value',
+    VISITS = 'visits'
+
 class MCTS:
-    def __init__(self, n_iters=1500, exploration_constant=2):
-        self.n_iters = n_iters
+    def __init__(
+        self,
+        init_state,
+        budgets=1500, 
+        exploration_constant=2,
+        max_depth=10
+    ):
+        self.budgets = budgets
         self.c = exploration_constant
+        self.max_depth = max_depth
+
+        self.tree = self._create_tree(init_state)
 
         # for debug
         self.o_cnt = 0
         self.x_cnt = 0
     
+    def _create_tree(self, state):
+        tree = nx.DiGraph()
+        tree.add_node(0)
+        tree.update(
+            nodes=[(0, {NodeData.DEPTH: 0,
+                        NodeData.STATE: state,
+                        NodeData.REWARD: 0,
+                        NodeData.VALUE: -np.inf,
+                        NodeData.VISITS: 0})])
+        return tree
+
     def search(self, state):
-        self.root = TreeNode(state, parent=None)
-        for _ in range(self.n_iters):
-            leaf_node = self.select(self.root)
+        for _ in range(self.budgets):
+            leaf_node = self._select_node(state)
+            
+            if self.tree.nodes[leaf_node][NodeData.VISITS] != 0:
+                leaf_node = self._expand_node(leaf_node)
+            score = self.rollout(leaf_node)
+            self.backpropagate(leaf_node, score)
 
-            print("------------------- Debug -------------------")
-            print(leaf_node.state)
-            print(leaf_node.visits)
-            print(leaf_node.reward)
-            print(leaf_node.value)
-            print("---------------------------------------------")
-            print()
-
-            reward = self.rollout(leaf_node)
-            self.backpropagate(leaf_node, reward)
-
-        child_id = np.argmax([child.value for child in self.root.children])
+        child_id = np.argmax([child.uct for child in self.root.children])
         return self.root.children[child_id]
 
-    # TODO (expand or UCB)
-    def select(self, node):
-        if node.visits == 0:
-            posslbie_states = node.state.get_all_possible_states()
-            for state in posslbie_states:
-                new_node = TreeNode(state, node)
-                node.children.append(new_node)
+    def _select_node(self):
+        is_leaf_node = False
+        leaf_node = 0
 
-        for child in node.children:
-            if child.visits == 0:
-                return child
+        while not is_leaf_node:
+            children = self.tree.neighbors(leaf_node)
+            if not children:
+                is_leaf_node = True
+            leaf_node = self._find_best_node_with_uct(children)
+        return leaf_node
 
-        return self.find_best_leaf_node(node)
+    def _find_best_node_with_uct(self, children):
+        best_node = children[0]
+        max_uct = -np.inf
+        for child in children:
+            node = self.tree.nodes[child]
+            exploitation = node[NodeData.REWARD] / node[NodeData.VISITS]
+            exploration = np.sqrt(np.log(self.tree.nodes[0][NodeData.VISITS]) / node[NodeData.VISITS])
+            uct = exploitation + self.c * exploration
+            
+            if uct > max_uct:
+                best_node = node
+                max_uct = uct 
 
-    def find_best_leaf_node(self, node):
-        ucts = []
-        for child_node in node.children:
-            exploit = child_node.reward / child_node.visits
-            # print(node.visits, child_node.visits)
-            explore = np.sqrt(np.log(node.visits) / child_node.visits)
-            value = exploit + self.c * explore
-            child_node.value = value
-            ucts.append(value)
-        best_idx = np.argmax(ucts)
-        return node.children[best_idx]
+        return best_node
+
+    def _expand_node(self):
+        pass
 
     def rollout(self, node):
         board = node.state
         while not board.evaluate_game():
+            # get_all_possible_states() 중요!!
+            # 많은 노력 예상
             possible_states = board.get_all_possible_states()
             if possible_states:
                 board = random.choice(possible_states)
@@ -92,3 +120,6 @@ class MCTS:
             node.visits += 1
             node.reward += reward
             node = node.parent
+
+    def visualizae_tree(self):
+        pass
