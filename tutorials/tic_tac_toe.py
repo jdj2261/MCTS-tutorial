@@ -137,57 +137,56 @@ class TTTBoard:
         print('\n Start Tic Tac Toe \n')
         print('  Type "q" to quit the game')
         print(self)
-
-        mcts = MCTS()
                 
         while True:
-            try:
-                user_input = input('>> ')
-                if user_input == 'q': break
-                if user_input == '': continue
-                
-                row = int(re.split(r',|,\s+| ', user_input)[0])
-                col = int(re.split(r',|, | ', user_input)[1])
-
-                if self.position[row, col] != self.empty:
-                    print('Already put!!')
-                    continue
-
-                self = self.move(row, col)
-                print(self)
-                
-                result = self.evaluate_game()
-                if result == GAME_RESULT.WIN:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                elif result == GAME_RESULT.LOSE:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                else:
-                    if self.is_finished():
-                        print('Game is drawn!\n')
-                        break
-
-                best_node = mcts.search(self)
-                self = best_node.state
-                print(self)
-
-                result = self.evaluate_game()
-                if result == GAME_RESULT.WIN:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                elif result == GAME_RESULT.LOSE:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                else:
-                    if self.is_finished():
-                        print('Game is drawn!\n')
-                        break
+            # try:
+            user_input = input('>> ')
+            if user_input == 'q': break
+            if user_input == '': continue
             
-            except Exception as e:
-                print('  Error:', e)
-                print('  Invalid input!!')
+            row = int(re.split(r',|,\s+| ', user_input)[0])
+            col = int(re.split(r',|, | ', user_input)[1])
 
+            if self.position[row, col] != self.empty:
+                print('Already put!!')
+                continue
+
+            self = self.move(row, col)
+            print(self)
+            
+            result = self.evaluate_game()
+            if result == GAME_RESULT.WIN:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            elif result == GAME_RESULT.LOSE:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            else:
+                if self.is_finished():
+                    print('Game is drawn!\n')
+                    break
+            
+            mcts = MCTS(self)
+            action = mcts.search()
+            self = action
+            print(self)
+            
+            result = self.evaluate_game()
+            if result == GAME_RESULT.WIN:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            elif result == GAME_RESULT.LOSE:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            else:
+                if self.is_finished():
+                    print('Game is drawn!\n')
+                    break
+            
+            # except Exception as e:
+            #     print('  Error:', e)
+            #     print('  Invalid input!!')
+            
 
 if __name__ == "__main__":
     board = TTTBoard()

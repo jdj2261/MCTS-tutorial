@@ -1,3 +1,4 @@
+from platform import node
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -112,6 +113,7 @@ tree.update(nodes=[(9,
                     })])
 tree.add_edge(4, 9)
 
+print(tree.nodes[9]['visits'])
 
 data = nx.tree_data(tree, root=0)
 print(len(data))
@@ -122,6 +124,7 @@ print([node for node in tree.neighbors(0)])
 #     if not nx.tree_data(tree, root=i)['children']:
 #         print(i)
 
+print([node for node in tree.predecessors(1)])
 
 # print(data['children'])
 
