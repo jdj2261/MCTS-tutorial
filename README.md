@@ -62,10 +62,10 @@ $ python tic_tac_toe.py
 | <img src="images/mcts2.png"/>        |
 | <img src="images/mcts3.png"/>        |
 
-D : Depth
-V : Visits
-R : Reward
-Q : R / V
+D : Depth  
+V : Visits  
+R : Reward  
+Q : R / V  
 P : Player
 
 ## Reference
