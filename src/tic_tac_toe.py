@@ -22,7 +22,7 @@ class TTTBoard:
 
         self.first_player = Marker.X
         self.second_player = Marker.O
-        self.winner = Marker.O
+        self.winner = None
 
         self.position = {}
         self.size = size
@@ -45,10 +45,10 @@ class TTTBoard:
         board_str += "==" * self.size + "\n"
 
         if self.cur_player == Marker.X:
-            board_str += f'{self.cur_player}, Your turn!!:\n'
+            board_str += f'{self.cur_player}, Your turn!!\n'
         
         elif self.cur_player == Marker.O:
-            board_str += f'{self.cur_player}, Your turn!!!:\n'
+            board_str += f'{self.cur_player}, Your turn!!!\n'
 
         return board_str
 
@@ -136,58 +136,63 @@ class TTTBoard:
     def play(self):
         print('\n Start Tic Tac Toe \n')
         print('  Type "q" to quit the game')
+        # self.position = {
+        #     (0, 0): 'O', (0, 1): '.', (0, 2): '.',
+        #     (1, 0): '.', (1, 1): 'X', (1, 2): '.',
+        #     (2, 0): '.', (2, 1): '.', (2, 2): '.',
+        # }
         print(self)
-                
         while True:
-            # try:
-            user_input = input('>> ')
-            if user_input == 'q': break
-            if user_input == '': continue
-            
-            row = int(re.split(r',|,\s+| ', user_input)[0])
-            col = int(re.split(r',|, | ', user_input)[1])
+            try:
+                user_input = input('>> ')
+                if user_input == 'q': break
+                if user_input == '': continue
+                
+                row = int(re.split(r',|,\s+| ', user_input)[0])
+                col = int(re.split(r',|, | ', user_input)[1])
 
-            if self.position[row, col] != self.empty:
-                print('Already put!!')
-                continue
+                if self.position[row, col] != self.empty:
+                    print('Already put!!')
+                    continue
 
-            self = self.move(row, col)
-            print(self)
-            
-            result = self.evaluate_game()
-            if result == GAME_RESULT.WIN:
-                print('player "%s" has won the game!\n' % self.winner)
-                break
-            elif result == GAME_RESULT.LOSE:
-                print('player "%s" has won the game!\n' % self.winner)
-                break
-            else:
-                if self.is_finished():
-                    print('Game is drawn!\n')
+                self = self.move(row, col)
+                print(self)
+                
+                result = self.evaluate_game()
+                if result == GAME_RESULT.WIN:
+                    print('player "%s" has won the game!\n' % self.winner)
                     break
-            
-            mcts = MCTS(self)
-            action = mcts.search()
-            self = action
-            print(self)
-            
-            result = self.evaluate_game()
-            if result == GAME_RESULT.WIN:
-                print('player "%s" has won the game!\n' % self.winner)
-                break
-            elif result == GAME_RESULT.LOSE:
-                print('player "%s" has won the game!\n' % self.winner)
-                break
-            else:
-                if self.is_finished():
-                    print('Game is drawn!\n')
+                elif result == GAME_RESULT.LOSE:
+                    print('player "%s" has won the game!\n' % self.winner)
                     break
-            
-            # except Exception as e:
-            #     print('  Error:', e)
-            #     print('  Invalid input!!')
+                else:
+                    if self.is_finished():
+                        print('Game is drawn!\n')
+                        break
+
+                mcts = MCTS(self)
+                action = mcts.search()
+                self = action
+                print(self)
+                
+                result = self.evaluate_game()
+                if result == GAME_RESULT.WIN:
+                    print('player "%s" has won the game!\n' % self.winner)
+                    break
+                elif result == GAME_RESULT.LOSE:
+                    print('player "%s" has won the game!\n' % self.winner)
+                    break
+                else:
+                    if self.is_finished():
+                        print('Game is drawn!\n')
+                        break
+
+            except Exception as e:
+                print('  Error:', e)
+                print('  Invalid input!!')
             
 
 if __name__ == "__main__":
     board = TTTBoard()
-    board.play()
+    while True:
+        board.play()
