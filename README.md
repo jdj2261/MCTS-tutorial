@@ -34,7 +34,7 @@ You need a [networkx](https://github.com/networkx/networkx) python library.
   $ brew info graphviz
   ~~~
 
-  In my cas, it was `/opt/homebrew/Cellar/graphviz/2.50.0`.
+  In my case, it was `/opt/homebrew/Cellar/graphviz/2.50.0`.
 
   Then run
 
