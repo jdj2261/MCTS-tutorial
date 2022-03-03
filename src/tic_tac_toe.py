@@ -1,3 +1,4 @@
+from cmath import exp
 import re
 import enum
 
@@ -170,7 +171,13 @@ class TTTBoard:
                         print('Game is drawn!\n')
                         break
 
-                mcts = MCTS(self)
+                mcts = MCTS(
+                    state=self,
+                    budgets=1200,
+                    exploration_constant=1.414,
+                    max_depth=5,
+                    visible_graph=True)
+
                 action = mcts.search()
                 self = action
                 print(self)

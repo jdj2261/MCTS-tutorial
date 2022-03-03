@@ -29,13 +29,15 @@ class MCTS:
         state,
         budgets=1200, 
         exploration_constant=1.414,
-        max_depth=5
+        max_depth=5,
+        visible_graph=False
     ):
         self.state = state
         self.budgets = budgets
         self.c = exploration_constant
         self.max_depth = max_depth
-
+        
+        self.visible = visible_graph
         self.tree = self._create_tree(state)
 
     def _create_tree(self, state):
@@ -53,35 +55,35 @@ class MCTS:
     def search(self):
         for i in range(self.budgets):
             # print(f"{sc.OKGREEN}Iteration : {i+1} {sc.ENDC}")
-            leaf_node = self._select_node()
-            print(f"{sc.OKCYAN}Select Node {leaf_node}{sc.ENDC}")
-            print(self.tree.nodes[leaf_node][NodeData.STATE])
-
+            leaf_node = self._select_node(root_node=0)
             state = self.tree.nodes[leaf_node][NodeData.STATE]
             visits = self.tree.nodes[leaf_node][NodeData.VISITS]
-            
-            is_terminal = state.evaluate_game()
-            if not is_terminal and (visits != 0 or leaf_node == 0):
+
+            print(f"{sc.OKCYAN}Selected Node {leaf_node}{sc.ENDC}")
+            print(state)
+
+            finished_game = state.evaluate_game()
+            if not finished_game and (visits != 0 or leaf_node == 0):
                 leaf_node = self._expand_leaf_node(leaf_node)
-                print(f"{sc.OKCYAN}Expand Node {leaf_node}{sc.ENDC}")
-                print(self.tree.nodes[leaf_node][NodeData.STATE])    
-                
+                print(f"{sc.OKCYAN}Expanded Node {leaf_node}{sc.ENDC}")
+                print(self.tree.nodes[leaf_node][NodeData.STATE])
+            
             winner = self._rollout(leaf_node)
             self._backpropagate(leaf_node, winner)
             
-            if (i+1) % 1200 == 0:
-                self.visualize("Backpropagatge")
-                print("==="*20)
+            if self.visible:
+                if (i+1) % 1200 == 0:
+                    self.visualize("Backpropagatge")
+                    print("==="*20)
+
         return self._get_best_action(root_node=0)
 
-    def _select_node(self):
-        cur_node = 0
-        while True:
-            children = [child for child in self.tree.neighbors(cur_node)]
-            if not children:
-                break
-            cur_node = self._find_best_node_with_uct(children)
-        return cur_node
+    def _select_node(self, root_node):
+        children = [child for child in self.tree.neighbors(root_node)]
+        if not children:
+            return root_node
+        best_node = self._find_best_node_with_uct(children)
+        return self._select_node(best_node)
 
     def _find_best_node_with_uct(self, children):        
         assert len(children) != 0
@@ -126,15 +128,12 @@ class MCTS:
         return expanded_node
         
     def _rollout(self, leaf_node):
-        # print(f"{sc.OKCYAN}Rollout{sc.ENDC}")
         state = self.tree.nodes[leaf_node][NodeData.STATE]
-        # print(f"{sc.WARNING}Current Player is {state.cur_player}{sc.ENDC}")
-        self.tree.nodes[leaf_node][NodeData.PLAYER] = state.next_player
+        # print(f"{sc.OKCYAN}Rollout{sc.ENDC}")
         while not state.evaluate_game():
             possible_states = state.get_all_possible_states()
             if possible_states:
                 state = random.choice(possible_states)
-                # print(state)
             else:
                 print(f"{sc.OKBLUE}************* Draw !!! *************{sc.ENDC}")
                 return
@@ -143,25 +142,23 @@ class MCTS:
         return state.winner
 
     def _backpropagate(self, leaf_node, winner):
-        is_parent_node = True
-        while is_parent_node:
-            parent_nodes = [node for node in self.tree.predecessors(leaf_node)]
-            cur_node = self.tree.nodes[leaf_node]
-            
-            cur_node[NodeData.VISITS] += 1
-            
-            if winner:
-                if cur_node[NodeData.PLAYER] == winner:
-                    cur_node[NodeData.REWARD] += 1
-                if cur_node[NodeData.PLAYER] != winner:
-                    cur_node[NodeData.REWARD] -= 1
+        cur_node = self.tree.nodes[leaf_node]
+        self._update_node(cur_node, winner)
 
-            cur_node[NodeData.VALUE] = cur_node[NodeData.REWARD] / cur_node[NodeData.VISITS]
+        parent_nodes = [node for node in self.tree.predecessors(leaf_node)]
+        if not parent_nodes:
+            return
+        leaf_node = parent_nodes[0]
+        self._backpropagate(leaf_node, winner)
 
-            if not parent_nodes:
-                is_parent_node = False
-            else:
-                leaf_node = parent_nodes[0]
+    def _update_node(self, cur_node, winner):
+        cur_node[NodeData.VISITS] += 1
+        if winner:
+            if cur_node[NodeData.PLAYER] == winner:
+                cur_node[NodeData.REWARD] += 1
+            if cur_node[NodeData.PLAYER] != winner:
+                cur_node[NodeData.REWARD] -= 1
+        cur_node[NodeData.VALUE] = cur_node[NodeData.REWARD] / cur_node[NodeData.VISITS]
 
     def _get_best_action(self, root_node=0):
         children = [child for child in self.tree.neighbors(root_node)]
