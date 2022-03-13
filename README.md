@@ -47,12 +47,19 @@ You need a [networkx](https://github.com/networkx/networkx) python library.
 
 ## How to use
 
-~~~shell
-$ cd src
-$ python tic_tac_toe.py
-~~~
+1. MCTS with rollout
 
+   ~~~shell
+   $ cd src/mcts_rollout
+   $ python tic_tac_toe.py
+   ~~~
 
+2. MCTS without rollout
+
+   ~~~shell
+   $ cd src/mcts_no_rollout
+   $ python tic_tac_toe.py
+   ~~~
 
 ## Example
 
