@@ -1,4 +1,3 @@
-from cmath import exp
 import re
 import enum
 
@@ -59,7 +58,7 @@ class TTTBoard:
         board.cur_player, board.next_player = board.next_player, board.cur_player
         return board
 
-    def evaluate_game(self):
+    def check_winner(self):
         for row in range(self.size):
             win_cnt = 0
             lose_cnt = 0
@@ -126,21 +125,21 @@ class TTTBoard:
                 return False
         return True
 
-    def get_all_possible_states(self):
-        states = []
+    def get_all_possible_actions(self):
+        actions = []
         for row in range(self.size):
             for col in range(self.size):
                 if self.position[row, col] == self.empty:
-                    states.append(self.move(row, col))
-        return states
+                    actions.append((row, col))
+        return actions
 
     def play(self):
         print('\n Start Tic Tac Toe \n')
         print('  Type "q" to quit the game')
         # self.position = {
         #     (0, 0): 'O', (0, 1): '.', (0, 2): '.',
-        #     (1, 0): '.', (1, 1): 'X', (1, 2): '.',
-        #     (2, 0): '.', (2, 1): '.', (2, 2): '.',
+        #     (1, 0): '.', (1, 1): 'O', (1, 2): '.',
+        #     (2, 0): 'X', (2, 1): 'X', (2, 2): '.',
         # }
         print(self)
         while True:
@@ -159,7 +158,7 @@ class TTTBoard:
                 self = self.move(row, col)
                 print(self)
                 
-                result = self.evaluate_game()
+                result = self.check_winner()
                 if result == GAME_RESULT.WIN:
                     print('player "%s" has won the game!\n' % self.winner)
                     break
@@ -173,16 +172,16 @@ class TTTBoard:
 
                 mcts = MCTS(
                     state=self,
-                    budgets=1200,
+                    n_iters=1000,
                     exploration_constant=1.414,
-                    max_depth=5,
+                    max_depth=8,
                     visible_graph=True)
 
-                action = mcts.search()
+                action = mcts.do_planning()
                 self = action
                 print(self)
                 
-                result = self.evaluate_game()
+                result = self.check_winner()
                 if result == GAME_RESULT.WIN:
                     print('player "%s" has won the game!\n' % self.winner)
                     break

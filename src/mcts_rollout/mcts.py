@@ -20,7 +20,7 @@ class NodeData:
     STATE = 'state'
     VISITS = 'visits'
     REWARD = 'reward'
-    VALUE = 'value'
+    Q = 'q'
     PLAYER = 'player'
     
 class MCTS:
@@ -47,7 +47,7 @@ class MCTS:
             nodes=[(0, {NodeData.DEPTH: 0,
                         NodeData.STATE: state,
                         NodeData.REWARD: 0,
-                        NodeData.VALUE: -np.inf,
+                        NodeData.Q: -np.inf,
                         NodeData.VISITS: 0,
                         NodeData.PLAYER: state.first_player})])
         return tree
@@ -55,7 +55,7 @@ class MCTS:
     def search(self):
         for i in range(self.budgets):
             # print(f"{sc.OKGREEN}Iteration : {i+1} {sc.ENDC}")
-            leaf_node = self._select_node(root_node=0)
+            leaf_node = self._select_node(cur_node=0)
             state = self.tree.nodes[leaf_node][NodeData.STATE]
             visits = self.tree.nodes[leaf_node][NodeData.VISITS]
 
@@ -72,16 +72,16 @@ class MCTS:
             self._backpropagate(leaf_node, winner)
             
             if self.visible:
-                if (i+1) % 1200 == 0:
+                if (i+1) % self.budgets == 0:
                     self.visualize("Backpropagatge")
                     print("==="*20)
 
         return self._get_best_action(root_node=0)
 
-    def _select_node(self, root_node):
-        children = [child for child in self.tree.neighbors(root_node)]
+    def _select_node(self, cur_node):
+        children = [child for child in self.tree.neighbors(cur_node)]
         if not children:
-            return root_node
+            return cur_node
         best_node = self._find_best_node_with_uct(children)
         return self._select_node(best_node)
 
@@ -120,7 +120,7 @@ class MCTS:
                     nodes=[(new_node, {NodeData.DEPTH: depth+1,
                                        NodeData.STATE: possible_state,
                                        NodeData.REWARD: 0,
-                                       NodeData.VALUE: -np.inf,
+                                       NodeData.Q: -np.inf,
                                        NodeData.VISITS: 0,
                                        NodeData.PLAYER: possible_state.next_player})])
                 self.tree.add_edge(leaf_node, new_node)
@@ -158,13 +158,13 @@ class MCTS:
                 cur_node[NodeData.REWARD] += 1
             if cur_node[NodeData.PLAYER] != winner:
                 cur_node[NodeData.REWARD] -= 1
-        cur_node[NodeData.VALUE] = cur_node[NodeData.REWARD] / cur_node[NodeData.VISITS]
+        cur_node[NodeData.Q] = cur_node[NodeData.REWARD] / cur_node[NodeData.VISITS]
 
     def _get_best_action(self, root_node=0):
         children = [child for child in self.tree.neighbors(root_node)]
-        best_idx = np.argmax([self.tree.nodes[child][NodeData.VALUE] for child in children])
+        best_idx = np.argmax([self.tree.nodes[child][NodeData.Q] for child in children])
         print(f"Reward: {[self.tree.nodes[child][NodeData.REWARD] for child in children]}")
-        print(f"Value : {[self.tree.nodes[child][NodeData.VALUE] for child in children]}")
+        print(f"Q : {[self.tree.nodes[child][NodeData.Q] for child in children]}")
         print(f"Visits: {[self.tree.nodes[child][NodeData.VISITS] for child in children]}")
         return self.tree.nodes[children[best_idx]][NodeData.STATE]
 
@@ -175,7 +175,7 @@ class MCTS:
                 self.tree.nodes[n][NodeData.DEPTH], 
                 self.tree.nodes[n][NodeData.VISITS], 
                 self.tree.nodes[n][NodeData.REWARD], 
-                self.tree.nodes[n][NodeData.VALUE],
+                self.tree.nodes[n][NodeData.Q],
                 self.tree.nodes[n][NodeData.PLAYER],) for n in self.tree.nodes}
 
         plt.figure(title, figsize=(12, 8),)
