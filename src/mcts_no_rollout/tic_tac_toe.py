@@ -137,65 +137,65 @@ class TTTBoard:
         print('\n Start Tic Tac Toe \n')
         print('  Type "q" to quit the game')
         # self.position = {
-        #     (0, 0): 'O', (0, 1): '.', (0, 2): '.',
-        #     (1, 0): '.', (1, 1): 'O', (1, 2): '.',
+        #     (0, 0): '.', (0, 1): '.', (0, 2): '.',
+        #     (1, 0): 'O', (1, 1): 'O', (1, 2): '.',
         #     (2, 0): 'X', (2, 1): 'X', (2, 2): '.',
         # }
         print(self)
         while True:
-            try:
-                user_input = input('>> ')
-                if user_input == 'q': break
-                if user_input == '': continue
-                
-                row = int(re.split(r',|,\s+| ', user_input)[0])
-                col = int(re.split(r',|, | ', user_input)[1])
+            # try:
+            user_input = input('>> ')
+            if user_input == 'q': break
+            if user_input == '': continue
+            
+            row = int(re.split(r',|,\s+| ', user_input)[0])
+            col = int(re.split(r',|, | ', user_input)[1])
 
-                if self.position[row, col] != self.empty:
-                    print('Already put!!')
-                    continue
+            if self.position[row, col] != self.empty:
+                print('Already put!!')
+                continue
 
-                self = self.move(row, col)
-                print(self)
-                
-                result = self.check_winner()
-                if result == GAME_RESULT.WIN:
-                    print('player "%s" has won the game!\n' % self.winner)
+            self = self.move(row, col)
+            print(self)
+            
+            result = self.check_winner()
+            if result == GAME_RESULT.WIN:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            elif result == GAME_RESULT.LOSE:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            else:
+                if self.is_finished():
+                    print('Game is drawn!\n')
                     break
-                elif result == GAME_RESULT.LOSE:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                else:
-                    if self.is_finished():
-                        print('Game is drawn!\n')
-                        break
 
-                mcts = MCTS(
-                    state=self,
-                    n_iters=1000,
-                    exploration_constant=1.414,
-                    max_depth=8,
-                    visible_graph=True)
+            mcts = MCTS(
+                state=self,
+                n_iters=1000,
+                exploration_constant=2,
+                max_depth=8,
+                visible_graph=True)
 
-                action = mcts.do_planning()
-                self = action
-                print(self)
-                
-                result = self.check_winner()
-                if result == GAME_RESULT.WIN:
-                    print('player "%s" has won the game!\n' % self.winner)
+            action = mcts.do_planning()
+            self = action
+            print(self)
+            
+            result = self.check_winner()
+            if result == GAME_RESULT.WIN:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            elif result == GAME_RESULT.LOSE:
+                print('player "%s" has won the game!\n' % self.winner)
+                break
+            else:
+                if self.is_finished():
+                    print('Game is drawn!\n')
                     break
-                elif result == GAME_RESULT.LOSE:
-                    print('player "%s" has won the game!\n' % self.winner)
-                    break
-                else:
-                    if self.is_finished():
-                        print('Game is drawn!\n')
-                        break
 
-            except Exception as e:
-                print('  Error:', e)
-                print('  Invalid input!!')
+            # except Exception as e:
+            #     print('  Error:', e)
+            #     print('  Invalid input!!')
             
 
 if __name__ == "__main__":
