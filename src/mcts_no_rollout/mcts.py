@@ -23,10 +23,12 @@ class NodeData:
     VISITS = 'visits'
     REWARD = 'reward'
     Q = 'q'
+    HISTORY = 'history'
     NODE = 'node'
     PLAYER = 'player'
-    
-class MCTS:
+
+class MCTS(NodeData):
+
     def __init__(
         self,
         state,
@@ -57,7 +59,8 @@ class MCTS:
                         NodeData.REWARD: 0,
                         NodeData.Q: -np.inf,
                         NodeData.NODE: 0,
-                        NodeData.PLAYER: state.first_player})])
+                        NodeData.PLAYER: state.first_player,
+                        NodeData.HISTORY: []})])
         return tree
 
     def do_planning(self):
@@ -83,6 +86,7 @@ class MCTS:
             self.tree.nodes[cur_node][NodeData.VISITS] += 1
             self.tree.nodes[cur_node][NodeData.REWARD] = reward
             self.tree.nodes[cur_node][NodeData.Q] = reward
+            self.tree.nodes[cur_node][NodeData.HISTORY].append(reward)
             return reward
 
         action, next_node = self._select_action(cur_node, state, depth)
@@ -123,7 +127,7 @@ class MCTS:
             next_node = random.choice([child for child in self.tree.neighbors(cur_node)])
         else:
             print(f"Cur node has children {children}")
-            next_node = self._find_best_node_with_uct(children, depth)
+            next_node = self._find_best_node_with_uct(children)
         action = self.tree.nodes[next_node][NodeData.ACTION]
         print(f"Get best action node is {next_node}, and Action is {action}")
         return action, next_node
@@ -140,11 +144,11 @@ class MCTS:
                                                   NodeData.REWARD: 0,
                                                   NodeData.Q: -np.inf,
                                                   NodeData.NODE: next_node,
-                                                  NodeData.PLAYER: state.cur_player})])
+                                                  NodeData.PLAYER: state.cur_player,
+                                                  NodeData.HISTORY: []})])
             self.tree.add_edge(cur_node, next_node)
 
-
-    def _find_best_node_with_uct(self, children, depth):
+    def _find_best_node_with_uct(self, children):
         assert len(children) != 0
 
         ucts = []
@@ -158,7 +162,7 @@ class MCTS:
             else:
                 exploitation = w
                 exploration = np.sqrt(np.log(total_n) / n)
-                uct = exploitation + 0.002 * exploration
+                uct = exploitation + self.c * exploration
             ucts.append(uct)
 
         best_node_idx = np.argmax(ucts)
@@ -173,6 +177,7 @@ class MCTS:
 
     def _update_value(self, cur_node, Q_sum):
         self.tree.nodes[cur_node][NodeData.VISITS] += 1
+        self.tree.nodes[cur_node][NodeData.HISTORY].append(Q_sum)
         if Q_sum > self.tree.nodes[cur_node][NodeData.Q]:
             self.tree.nodes[cur_node][NodeData.Q] = Q_sum
 
