@@ -136,11 +136,11 @@ class TTTBoard:
     def play(self):
         print('\n Start Tic Tac Toe \n')
         print('  Type "q" to quit the game')
-        self.position = {
-            (0, 0): '.', (0, 1): '.', (0, 2): '.',
-            (1, 0): 'O', (1, 1): '.', (1, 2): '.',
-            (2, 0): 'X', (2, 1): '.', (2, 2): '.',
-        }
+        # self.position = {
+        #     (0, 0): '.', (0, 1): '.', (0, 2): '.',
+        #     (1, 0): 'O', (1, 1): '.', (1, 2): '.',
+        #     (2, 0): 'X', (2, 1): '.', (2, 2): '.',
+        # }
         print(self)
         while True:
             # try:
